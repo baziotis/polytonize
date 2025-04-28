@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Μετατροπέας Μονοτονικοῦ σὲ Πολυτονικό</title>
+  <style>
+
+    @font-face {
+      font-family: 'GFS Didot';
+      src: url('../fonts/GFSDidot-Regular.woff2') format('woff2'),
+        url('../fonts/GFSDidot-Regular.woff') format('woff'),
+        url('../fonts/GFSDidot-Regular.ttf') format('truetype');
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    body {
+      font-family: 'GFS Didot', sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    form {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    
+    textarea {
+      width: 90%;
+      min-height: 200px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    
+    button {
+      background-color: #3badc9;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background-color: #40678c;
+    }
+    
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f5f5f5;
+      display: none;
+    }
+
+    .hover-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .hover-text {
+      visibility: hidden;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 4px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%; /* Position above the word */
+      left: 50%;
+      width: 400px;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      // white-space: nowrap;
+    }
+
+    .hover-container:hover .hover-text {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Μετατροπέας Μονοτονικοῦ σὲ Πολυτονικό</h1>
+  
+  <form id="converter-form" aria-labelledby="form-title">
+    
+    <div>
+      <label for="input-text">Κείμενο (Μονοτονικό):</label>
+      <textarea 
+        id="input-text" 
+        name="inputText" 
+        placeholder="Εἰσάγετε τὸ μονοτονικό σας κείμενο…" 
+        aria-required="true"
+        required
+      ></textarea>
+    </div>
+    
+    <button type="submit" aria-label="Convert text">Πολυτονίστε</button>
+  </form>
+  
+  <div id="result" class="result" aria-live="polite" role="region">
+    <h2>Πολυτονισμένο Κείμενο</h2>
+    <div id="output-text"><span class="hover-container">Κάποια <span class="hover-text">Ἡ πρώτη ἐξήγησι</span></span> <span class="hover-container">λέξη</span></div>
+  </div>
+  
+  <script>
+    const non_space_punct = new Set(['.', ',', ';']);
+
+    document.getElementById('converter-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const inputText = document.getElementById('input-text').value.trim();
+      
+      if (!inputText) {
+        alert('Please enter some text to convert.');
+        return;
+      }
+      
+      // Here you would typically send the data to the server
+      // For now, we'll just show the result div with the input text
+      document.getElementById('output-text').textContent = inputText;
+      document.getElementById('result').style.display = 'block';
+
+      // Define the base URL for the API server
+      // Change this to your actual server URL
+      const baseUrl = 'http://localhost:8000';
+
+      const encodedText = encodeURIComponent(inputText);
+    
+      // Create a proper URL with the encoded text
+      const url = `${baseUrl}/nlp?text=${encodedText}`;
+
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        let res = '';
+        for (let [word, expl] of data['words']) {
+          if (expl === null) {
+            if (non_space_punct.has(word)) {
+              res = res.slice(0, -1);
+              res += word + ' ';
+            } else {
+              res += word;
+            }
+          } else {
+            res += `<span class="hover-container">${word}<span class="hover-text">${expl}</span></span> `
+          }
+        }
+        document.getElementById('output-text').innerHTML = res;
+        document.getElementById('result').style.display = 'block';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during conversion.');
+      });
+    });
+  </script>
+
+  <!-- <script src="explain.js"></script> -->
+  
+</body>
+</html>
