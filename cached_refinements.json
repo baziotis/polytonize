@@ -11,5 +11,32 @@
     "VerbForm": "Fin",
     "Voice": "Act",
     "POS": "VERB"
+  },
+  "φεύγα": {
+    "norm_word": "φευγα",
+    "Aspect": "Perf",
+    "Case": "_",
+    "Gender": "_",
+    "Mood": "Imp",
+    "Number": "Sing",
+    "Person": "2",
+    "Tense": "Past",
+    "VerbForm": "Fin",
+    "Voice": "Act",
+    "POS": "VERB"
+  },
+  "φύγετε": {
+    "norm_word": "φυγετε",
+    "Aspect": "Perf",
+    "Case": "_",
+    "Gender": "_",
+    "Mood": "Imp",
+    "Number": "Plur",
+    "Person": "2",
+    "Tense": "Past",
+    "VerbForm": "Fin",
+    "Voice": "Act",
+    "POS": "VERB"
   }
 }
+

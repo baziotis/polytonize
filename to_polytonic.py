@@ -338,7 +338,8 @@ def polytonize_word(word, pos, next_word, next_pos):
     amend_explanation(f"Αὐτὴ ἡ λέξη ἀνήκει σὲ μιὰ μικρὴ λίστα λέξεων ποὺ παίρνουν πάντοτε περισπωμένη. Ἡ λίστα περιλαμβάνει τὶς ἐξῆς λέξεις: {", ".join(list(KNOWN_CIRCUMFLEXED))}")
     if len(syllables) == 1:
       word = add_accent(word, syllables, starting_pos)
-      word = use_circumflex(word)
+    # END IF #
+    word = use_circumflex(word)
     # END IF #
     
     return word, _global_explanation
