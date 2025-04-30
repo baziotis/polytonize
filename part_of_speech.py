@@ -15,11 +15,3 @@ def get_pos(text):
 
   res = [{'norm_word': token.text} | (token.feats | {'POS': token.upos}) for token in doc.tokens]
   return res
-
-# text = "Η μαμά μου μου έφτιαξε γλυκό."
-# doc = nlp(text)
-# for token in doc.tokens:
-#   print(token.text)
-#   print(token.upos)
-#   print(token.feats)
-#   print('---')

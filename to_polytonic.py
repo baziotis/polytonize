@@ -300,10 +300,6 @@ def should_circum_penult(word, pos, norm_ult, norm_penult):
     amend_explanation("Μακρὸ πρὸ βραχέου περισπᾶται.")
     return True
 
-  if POS == 'VERB':
-    if ((word.endswith(('αν', 'α'))) and
-        long_or_short(norm_penult, pos) == 'long'):
-      return True
   return False
 
 def clitic_gets_accent(word, norm_word, pos, syllables, starting_pos):
@@ -443,6 +439,28 @@ def polytonize_single_word(word):
 
   return polytonize_word(word, pos, None, None)
 
+with open('cached_refinements.json', 'r') as fp:
+  CACHED_REFINEMENTS = json.load(fp)
+
+def refine_pos(orig_words, pos):
+  # gr_nlp_toolkit makes mistakes. Here we try to catch some of them.
+  assert len(orig_words) == len(pos)
+  new_pos = []
+  for orig_w, pos_w in zip(orig_words, pos):
+    new_pos_w = pos_w
+    # First we deal with simple cases where we can tell without any context, and
+    # we cache them.
+    lowered = orig_w.lower()
+    try:
+      new_pos_w = CACHED_REFINEMENTS[lowered]
+    except:
+      pass
+
+    new_pos.append(new_pos_w)
+  ### END FOR ###
+
+  return new_pos
+
 def to_polytonic(mono_text):
   # Pairs of (word, explanation)
   res = []
@@ -450,6 +468,7 @@ def to_polytonic(mono_text):
 
   orig_words = tokenize_greek_with_punctuation(mono_text)
   print(orig_words)
+  pos = refine_pos(orig_words, pos)
   for pos_w in pos:
     print(json.dumps(pos_w, indent=2, ensure_ascii=False))
   assert (len(orig_words) == len(pos))
