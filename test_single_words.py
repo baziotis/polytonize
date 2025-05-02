@@ -4,7 +4,7 @@ import string_compare
 def util(test):
   word = test['orig']
   poly_corr = test['poly']
-  poly_word, _ = to_polytonic.polytonize_single_word(word)
+  poly_word, _, _ = to_polytonic.polytonize_single_word(word)
 
   assert string_compare.compare_strings(poly_word, poly_corr)  
 
@@ -129,3 +129,12 @@ def test_des():
   """look (imperative) - single syllable so it doesn't get an accent in monotonic but it should
   get an accent in polytonic."""
   util({'orig': 'δες', 'poly': 'δές'})
+
+def test_protoporia():
+  """novelty, pioneering activity"""
+  util({'orig': 'πρωτοπορία', 'poly': 'πρωτοπορία'})
+
+
+def test_shizoun():
+  """rip, tear"""
+  util({'orig': 'σχίζουν', 'poly': 'σχίζουν'})

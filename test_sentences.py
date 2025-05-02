@@ -184,6 +184,12 @@ def test_real_sentence1():
 }
   util(t)
   
+def test_double_accent():
+  t = {'mono': "Τα προβλήματά του.",
+       'poly': "Τὰ προβλήματά του."
+}
+  util(t)
+  
 # TODO: Test ὡς and ὥς
 
 if __name__ == '__main__':

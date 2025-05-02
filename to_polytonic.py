@@ -139,12 +139,19 @@ def has_accent(syl):
 
 def find_accent(syllables):
   acc_pos = -1
+  double_acc = False
   for i, syl in enumerate(syllables):
     if has_accent(syl):
       if acc_pos != -1:
-        raise Exception("double accent")
+        if not double_acc:
+          double_acc = True
+        else:
+          # No word can have three accents.
+          raise Exception("triple accent")
+        # END IF #
+      # END IF #
       acc_pos = i
-  return acc_pos
+  return acc_pos, double_acc
 
 
 def use_circumflex(word):
@@ -255,6 +262,34 @@ def long_or_short(syl_bundle, pos):
       if norm_word.endswith(('αμε', 'αμαι', 'άτε', 'άνε', 'ασαι', 'αται', 'ασθε', 'αστε')):
         expl = 'Τὸ «α» στὴν παραλήγουσα τῶν ρημαντικῶν καταλήξεων -άμε, -αμαι, -άτε, -άνε, -άσαι, -άται καὶ -άσθε/-άστε είναι μακρό.'
         res = 'long'
+      # Source:
+      # https://users.sch.gr/ipap/Ellinikos%20Politismos/Yliko/Theoria%20arxaia/makra-braxea.htm
+      # TODO: For the following, ideally we would be able to find the
+      # "normalizsed" version of a verb. For example, for "σχίσει", we would get
+      # "σχίζω". But I don't know how to get that; gr_nlp_toolkit won't give us
+      # that. So, I've tried to include all possible endings, but this may not
+      # be complete or sound.
+      elif norm_word.endswith(('αζω', 'ιζω', 'υζω',
+                               'ασω', 'ισω', 'υσω',
+                               # ---- 2nd person singular ------
+                               'αζεις', 'ιζεις', 'υζει',
+                               'ασεις', 'ισεις', 'υσεις',
+                               # ---- 3rd person singular ------
+                               'αζει', 'ιζει', 'υζει',
+                               'ασει', 'ισει', 'υσει',
+                               # ---- 1st person plural ------
+                               'αζουμε', 'ιζουμε', 'υζουμε',
+                               'ασουμε', 'ισουμε', 'υσουμε',
+                               # ---- 2nd person plural ------
+                               'αζετε', 'ιζετε', 'υζετε',
+                               'ασετε', 'ισετε', 'υσετε',
+                               # ---- 3rd person plural ------
+                               'αζουν', 'ιζουν', 'υζουν',
+                               'ασουν', 'ισουν', 'υσουν',
+                               )) and (not norm_word.startswith(('κρα', 'γρυ'))):
+        expl = 'Τὰ βαρύτονα ρήματα ποὺ τελειώνουν σὲ -ζω (-άζω, -ίζω, -ύζω) ἔχουν τὸ δίχρονο τῆς παραλήγουσας βραχύ. Ἐξαιροῦνται τα «γρύζω», «κράζω».'
+        res = 'short'
+      # END IF #
     # END IF #
   # END IF #
   
@@ -295,10 +330,12 @@ def should_circum_penult(word, pos, norm_ult, norm_penult):
   ult_syl = norm_ult['syl']
   penult_syl = norm_penult['syl']
 
-  if (long_or_short(norm_penult, pos) == 'long' and
-      long_or_short(norm_ult, pos) == 'short'):
-    amend_explanation("Μακρὸ πρὸ βραχέου περισπᾶται.")
-    return True
+  if long_or_short(norm_penult, pos) == 'long':
+    if long_or_short(norm_ult, pos) == 'short':
+      amend_explanation("Μακρὸ πρὸ βραχέου περισπᾶται.")
+      return True
+    # END IF #
+  # END IF #
 
   return False
 
@@ -317,12 +354,18 @@ def clitic_gets_accent(word, norm_word, pos, syllables, starting_pos):
     word = add_accent(word, syllables, starting_pos)
     if norm_word in CIRCUM_PRONOUNS:
       word = use_circumflex(word)
+      amend_explanation(\
+f"""
+Ἡ συγκεκριμένη ἀντωνυμία ἀνήκει σὲ μιὰ λίστα ἀντωνυμιῶν ποὺ παίρνουν
+περισπωμένη (ὅταν τονίζονται). Ἡ πλήρης λίστα εἶναι ἡ ἐξῆς: {CIRCUM_PRONOUNS}.
+""")
     # END IF #
     return word
   # END IF #
 
   return None
-def polytonize_word(word, pos, next_word, next_pos):
+
+def polytonize_word(word, pos, prev_double_acc, next_word, next_pos):
   global _global_explanation
   res = ''
   _global_explanation = ''
@@ -330,7 +373,26 @@ def polytonize_word(word, pos, next_word, next_pos):
   norm_word = normalize_word(word)
   syllables, starting_pos = syllabify_greek_word(word)
   print(f"{word}: {'-'.join(syllables)}")
-  acc_pos = find_accent(syllables)
+  acc_pos, double_acc = find_accent(syllables)
+  
+  if prev_double_acc:
+    assert is_possibly_clitic(word)
+    expl = "Αὐτὴ ἡ λέξη εἶναι ἐγκλιτικὴ καὶ δὲν τονίζεται γιατί τὴν σκεφτόμαστε ὡς μέρος τῆς προηγουμένης λέξης."
+    return word, expl, False
+  # END IF #
+  
+  if double_acc:
+    # We have double accent. The only way this can happen is when a clitic
+    # follows and the word has the accent in the antepenult. As such, the first
+    # accent is always acute, and the second one too. TODO: Verify that we can't
+    # have a circumflex in the ultima.
+    #
+    # Leave it as it is, it already has the two acute accents that are needed.
+    assert is_possibly_clitic(next_word)
+    expl = "Ἡ ἐπόμενη λέξη εἶναι ἐγκλιτική, καὶ αὐτὴ τονίζεται στὴν προπαραλήγουσα. Γιὰ νὰ μὴν παραβιαστῇ ὁ νόμος τῆς τριχρονίας, μιᾶς καὶ ἡ ἐγκλιτικὴ λειτουργεῖ ὡς μία ἀκόμη συλλαβή, μπαίνει δεύτερος τόνος στὴν λήγουσα."
+    return word, expl, True
+  # END IF #
+  
   should_circum = False
   inv_acc_pos = len(syllables) - 1 - acc_pos
   
@@ -371,6 +433,10 @@ def polytonize_word(word, pos, next_word, next_pos):
           should_circum = False
           inv_acc_pos = 0
           word = add_accent(word, syllables, starting_pos)
+          amend_explanation(\
+f"""
+Ἀνήκει στὸν γενικὸ κανόνα πὼς οἱ μονοσύλλαβες λέξεις τονίζονται μὲ ὀξεῖα.
+""")
         else:
           amend_explanation(\
   f"""
@@ -431,14 +497,15 @@ def polytonize_word(word, pos, next_word, next_pos):
     # END IF #
   # END IF #
   
-  return res, _global_explanation
+  return res, _global_explanation, False
 
 def polytonize_single_word(word):
 
   # Get part of speech for the word
   pos = part_of_speech.get_pos_single_word(word)
 
-  return polytonize_word(word, pos, None, None)
+  res = polytonize_word(word, pos, False, None, None)
+  return res
 
 with open('cached_refinements.json', 'r') as fp:
   CACHED_REFINEMENTS = json.load(fp)
@@ -476,6 +543,7 @@ def to_polytonic(mono_text):
   i = 0
   len_orig_words = len(orig_words)
   len_pos = len(pos)
+  prev_double_acc = False
   while i < len_orig_words:
     orig_word = orig_words[i]
     next_word = orig_words[i+1] if i < (len_orig_words-1) else None
@@ -485,8 +553,10 @@ def to_polytonic(mono_text):
     if word_pos['POS'] == 'PUNCT':
       assert is_punctuation(orig_word)
       res.append((orig_word, None))
+      prev_double_acc = False
     else:
-      poly_word, expl = polytonize_word(orig_word, word_pos, next_word, next_pos)
+      poly_word, expl, prev_double_acc = \
+        polytonize_word(orig_word, word_pos, prev_double_acc, next_word, next_pos)
       res.append((poly_word, expl))
     # END IF #
     i += 1
