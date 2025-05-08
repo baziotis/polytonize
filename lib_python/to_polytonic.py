@@ -1,8 +1,9 @@
-import unicodedata
-import part_of_speech
+import json
 import re
 import string
-import json
+import unicodedata
+
+import part_of_speech
 
 # TODO: We're not handling diairesis.
 
@@ -440,7 +441,7 @@ f"""
         else:
           amend_explanation(\
   f"""
-  Αυτὴ ἡ λέξη εἶναι στὶς λίγες ἐξαιρέσεις μονσύλλαβων λέξεων ποὺ δὲν τονίζονται.
+  Αυτὴ ἡ λέξη εἶναι στὶς λίγες ἐξαιρέσεις μονοσύλλαβων λέξεων ποὺ δὲν τονίζονται.
   Αυτὲς οἱ εξαιρέσεις περιλαμβάνουν τὶς ἐξῆς λέξεις: {NON_ACC_TO_STR}.
   """)
         # END IF #
