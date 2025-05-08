@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use strum::{EnumIs, EnumString};
 
-pub fn label_from_py_object<T: FromStr>(bound: &Bound<'_, PyAny>) -> PyResult<Option<T>> {
+fn label_from_py_object<T: FromStr>(bound: &Bound<'_, PyAny>) -> PyResult<Option<T>> {
     let value: &str = bound.extract()?;
     match value {
         "_" => Ok(None),
@@ -361,13 +361,13 @@ impl FromPyObject<'_> for PartOfSpeech {
     }
 }
 
-pub struct PartOfSpeechModule {
+pub(crate) struct PartOfSpeechModule {
     get_for_single_word: Py<PyAny>,
     get_for_text: Py<PyAny>,
 }
 
 impl PartOfSpeechModule {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Python::with_gil(|py| {
             let pos_module = PyModule::import(py, "pos").unwrap();
             let get_for_single_word = pos_module.getattr("get_for_single_word").unwrap().unbind();
@@ -379,7 +379,7 @@ impl PartOfSpeechModule {
         })
     }
 
-    pub fn get_for_single_word(&self, word: &str) -> Option<PartOfSpeech> {
+    pub(crate) fn get_for_single_word(&self, word: &str) -> Option<PartOfSpeech> {
         Python::with_gil(|py| {
             self.get_for_single_word
                 .call1(py, (word,))
@@ -388,7 +388,7 @@ impl PartOfSpeechModule {
         })
     }
 
-    pub fn get_for_text(&self, text: &str) -> Option<Vec<PartOfSpeech>> {
+    pub(crate) fn get_for_text(&self, text: &str) -> Option<Vec<PartOfSpeech>> {
         Python::with_gil(|py| {
             self.get_for_text
                 .call1(py, (text,))
@@ -398,13 +398,9 @@ impl PartOfSpeechModule {
     }
 }
 
-static POS_MODULE: Lazy<PartOfSpeechModule> = Lazy::new(PartOfSpeechModule::new);
+pub(crate) static POS_MODULE: Lazy<PartOfSpeechModule> = Lazy::new(PartOfSpeechModule::new);
 
-pub fn get_for_single_word(word: &str) -> Option<PartOfSpeech> {
-    POS_MODULE.get_for_single_word(word)
-}
-
-pub static POS_REFINEMENTS: Lazy<HashMap<&str, PartOfSpeech>> = Lazy::new(|| {
+pub(crate) static POS_REFINEMENTS: Lazy<HashMap<&str, PartOfSpeech>> = Lazy::new(|| {
     HashMap::from([
         (
             "πήδα",
@@ -459,6 +455,10 @@ pub static POS_REFINEMENTS: Lazy<HashMap<&str, PartOfSpeech>> = Lazy::new(|| {
         ),
     ])
 });
+
+pub fn get_for_single_word(word: &str) -> Option<PartOfSpeech> {
+    POS_MODULE.get_for_single_word(word)
+}
 
 pub fn get_for_text(text: &str) -> Option<Vec<PartOfSpeech>> {
     POS_MODULE.get_for_text(text)

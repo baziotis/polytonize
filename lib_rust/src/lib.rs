@@ -9,7 +9,7 @@ use crate::extension::{
     AccentExtensions, DiphthongExtensions, GrammarExtensions, NormalizationExtensions,
     VowelExtensions,
 };
-use crate::pos::{POS_REFINEMENTS, PartOfSpeech, PartOfSpeechType};
+use crate::pos::{POS_MODULE, POS_REFINEMENTS, PartOfSpeech, PartOfSpeechType};
 use crate::syllables::GreekSyllables;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -592,6 +592,8 @@ pub fn polytonize_word(
         res_word.make_circumflexed();
     }
 
+    ctx.previous_was_double_accented = false;
+
     PolytonizedWord::new(res_word, res_explanation)
 }
 
@@ -630,10 +632,32 @@ pub fn convert_to_polytonic(words: &[&str], mut pos: Vec<PartOfSpeech>) -> Vec<P
     res
 }
 
+/// Processes the input `text` and returns a list of words that
+/// are correctly polytonized along with explanations per word
+/// that describe why this conversion happened.
 pub fn polytonize_text(text: &str) -> Vec<PolytonizedWord> {
     let pos = pos::get_for_text(text).unwrap();
     let words = tokenize_greek_with_punctuation(text);
     convert_to_polytonic(&words, pos)
+}
+
+/// _Entrypoint_ of the library which performs initializations.
+/// Basically, triggers the global `Lazy` objects to load.
+/// If you don't call this function nothing will happen.
+/// The objects will be initialized the first time they are accessed.
+/// This is merely a way of triggering the initializations on startup
+pub fn initialize() {
+    let _ = &*TOKENIZER_REGEX;
+    let _ = &*KNOWN_CIRCUMFLEXED;
+    let _ = &*KNOWN_CIRCUMFLEXED_JOINED;
+    let _ = &*ALWAYS_ACUTE;
+    let _ = &*CLITICS;
+    let _ = &*CIRCUM_PRONOUNS;
+    let _ = &*CIRCUM_PRONOUNS_JOINED;
+    let _ = &*KNOWN_NON_ACCENTED_SINGLE_SYLLABLE;
+    let _ = &*SINGLE_SYL_NON_ACCENTED_JOINED;
+    let _ = &*POS_REFINEMENTS;
+    let _ = &*POS_MODULE;
 }
 
 #[cfg(test)]
