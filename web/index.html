@@ -170,13 +170,15 @@
       .then(response => response.json())
       .then(data => {
         let res = '';
-        for (let [word, expl] of data['words']) {
+        for (const item of data) {
+          const word = item["word"];
+          const expl = item["explanation"];
           if (expl === null) {
             if (non_space_punct.has(word)) {
               res = res.slice(0, -1);
               res += word + ' ';
             } else {
-              res += word;
+              res += word + ' ';
             }
           } else {
             res += `<span class="hover-container">${word}<span class="hover-text">${expl}</span></span> `

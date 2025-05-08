@@ -11,6 +11,7 @@ strum = { version = "0.27.*", features = ["derive"] }
 unicode-normalization = "0.1.*"
 unic-ucd-normal = "0.9.*"
 unic-ucd-category = "0.9.*"
+serde = { version = "1.*", features = ["derive"] }
 
 [dev-dependencies]
 rstest = "0.25.*"

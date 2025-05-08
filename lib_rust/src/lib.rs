@@ -9,10 +9,11 @@ use crate::extension::{
     AccentExtensions, DiphthongExtensions, GrammarExtensions, NormalizationExtensions,
     VowelExtensions,
 };
-use crate::pos::{POS_MODULE, POS_REFINEMENTS, PartOfSpeech, PartOfSpeechType};
+use crate::pos::{PartOfSpeech, PartOfSpeechType, POS_MODULE, POS_REFINEMENTS};
 use crate::syllables::GreekSyllables;
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
@@ -172,7 +173,7 @@ impl Display for Explanation {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct PolytonizedWord {
     pub word: String,
     pub explanation: Option<String>,
