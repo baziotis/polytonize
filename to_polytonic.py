@@ -404,7 +404,7 @@ def polytonize_word(word, pos, prev_double_acc, next_word, next_pos):
     word = use_circumflex(word)
     # END IF #
     
-    return word, _global_explanation
+    return word, _global_explanation, False
   # END IF #
 
   if norm_word in ALWAYS_ACUTE:
