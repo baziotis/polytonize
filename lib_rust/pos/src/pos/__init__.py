@@ -4,15 +4,16 @@ nlp = Pipeline("pos")
 
 
 def get_for_single_word(word: str) -> dict[str, str]:
-    doc = nlp(word)
+  doc = nlp(word)
 
-    token = doc.tokens[0]
-    res = token.feats | {'POS': token.upos, 'normalized': token.text }
-    return res
+  token = doc.tokens[0]
+  res = token.feats | {'POS': token.upos, 'normalized': token.text}
+  return res
 
 
 def get_for_text(text: str) -> list[dict[str, str]]:
-    doc = nlp(text)
+  doc = nlp(text)
 
-    res = [token.feats | {'POS': token.upos, 'normalized': token.text} for token in doc.tokens]
-    return res
+  res = [token.feats | {'POS': token.upos,
+                        'normalized': token.text} for token in doc.tokens]
+  return res
